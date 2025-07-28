@@ -7,9 +7,11 @@ import Input from "./input";
 
 export default function App() {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const startedRef = useRef(false);
 
   useEffect(() => {
-    if (videoRef.current) {
+    if (videoRef.current && !startedRef.current) {
+      startedRef.current = true;
       startWebRTC(videoRef.current);
     }
   }, []);
