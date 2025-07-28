@@ -8,12 +8,14 @@ export default function Player({
   videoRef: RefObject<HTMLVideoElement | null>;
 }) {
   return (
-    <video
-      ref={videoRef}
-      autoPlay
-      playsInline
-      muted
-      className="w-full h-full object-contain bg-black"
-    />
+    <div className="relative w-full h-screen overflow-hidden bg-black">
+      <video
+        ref={videoRef}
+        muted
+        autoPlay
+        playsInline
+        className="absolute inset-0 w-full h-full object-contain bg-black"
+      />
+    </div>
   );
 }

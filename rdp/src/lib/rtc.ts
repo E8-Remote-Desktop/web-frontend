@@ -1,5 +1,5 @@
 export async function startWebRTC(video: HTMLVideoElement) {
-  const conn = new WebSocket("ws://192.168.1.231:8080");
+  const conn = new WebSocket("wss://not2.projecteclipse.org");
 
   const pc = new RTCPeerConnection({
     iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
