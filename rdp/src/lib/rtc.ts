@@ -13,6 +13,32 @@ export async function startWebRTC(video: HTMLVideoElement) {
     if (video.srcObject !== event.streams[0]) {
       video.srcObject = event.streams[0];
     }
+    // Start polling WebRTC stats every 5 seconds
+    setInterval(async () => {
+      const stats = await pc.getStats();
+
+      stats.forEach((report) => {
+        if (report.type === "inbound-rtp" && report.kind === "video") {
+          const packetsLost = report.packetsLost ?? 0;
+          const packetsReceived = report.packetsReceived ?? 0;
+          const jitter = report.jitter ?? 0;
+          const bytesReceived = report.bytesReceived ?? 0;
+
+          console.log(`[Video Stats]
+Packets Received: ${packetsReceived}
+Packets Lost:     ${packetsLost}
+Jitter:           ${jitter}
+Bytes Received:   ${bytesReceived}`);
+        }
+
+        if (report.type === "track" && report.kind === "video") {
+          console.log(`[Video Track]
+  Frames Decoded:     ${report.framesDecoded}
+  Frames Dropped:     ${report.framesDropped}
+  Frame Width/Height: ${report.frameWidth}x${report.frameHeight}`);
+        }
+      });
+    }, 5000);
   };
 
   pc.onicecandidate = (event) => {
