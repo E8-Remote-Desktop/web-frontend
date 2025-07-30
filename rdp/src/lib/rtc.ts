@@ -7,12 +7,13 @@ export async function startWebRTC(video: HTMLVideoElement) {
 
   const pendingCandidates: RTCIceCandidateInit[] = [];
   let remoteDescriptionSet = false;
+  const remoteStream = new MediaStream();
+  video.srcObject = remoteStream;
 
   pc.ontrack = (event) => {
     console.log("Recieved Media Track:", event.streams[0]);
-    if (video.srcObject !== event.streams[0]) {
-      video.srcObject = event.streams[0];
-    }
+    remoteStream.addTrack(event.track);
+
     // Start polling WebRTC stats every 5 seconds
     setInterval(async () => {
       const stats = await pc.getStats();

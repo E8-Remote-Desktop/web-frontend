@@ -90,6 +90,7 @@ const KeyMap: Record<string, number> = {
 
 export default function Input({ dataChannel, videoRef }: InputProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+
   const handleUnmute = useCallback(async () => {
     const video = videoRef.current;
     if (!video) return;
@@ -98,6 +99,7 @@ export default function Input({ dataChannel, videoRef }: InputProps) {
     try {
       await video.play();
       console.log("Unmuted Video");
+      console.log(video.volume);
     } catch (err) {
       console.error("Error unmuting video: ", err);
     }
