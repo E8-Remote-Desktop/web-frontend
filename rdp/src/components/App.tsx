@@ -26,7 +26,7 @@ export default function App() {
     <div className="relative w-full h-full">
       <Player videoRef={videoRef} />
       {/* Pass dataChannel to Input */}
-      <Input dataChannel={dataChannel} />
+      <Input dataChannel={dataChannel} videoRef={videoRef} />
     </div>
   );
 }

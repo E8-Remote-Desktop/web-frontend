@@ -1,9 +1,10 @@
 "use client";
 
-import { useRef, useEffect, useCallback } from "react";
+import { useRef, useEffect, useCallback, RefObject } from "react";
 
 interface InputProps {
   dataChannel: RTCDataChannel | null;
+  videoRef: RefObject<HTMLVideoElement | null>;
 }
 
 // Linux-compatible keycode mapping (from linux/input-event-codes.h)
@@ -87,8 +88,20 @@ const KeyMap: Record<string, number> = {
   Delete: 111,
 };
 
-export default function Input({ dataChannel }: InputProps) {
+export default function Input({ dataChannel, videoRef }: InputProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const handleUnmute = useCallback(async () => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    video.muted = false;
+    try {
+      await video.play();
+      console.log("Unmuted Video");
+    } catch (err) {
+      console.error("Error unmuting video: ", err);
+    }
+  }, [videoRef]);
 
   const sendBuffer = useCallback(
     (buffer: ArrayBuffer) => {
@@ -172,6 +185,7 @@ export default function Input({ dataChannel }: InputProps) {
   };
 
   const handleClick = () => {
+    handleUnmute();
     containerRef.current?.requestPointerLock();
   };
   useEffect(() => {
