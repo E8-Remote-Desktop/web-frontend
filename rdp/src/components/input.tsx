@@ -170,11 +170,33 @@ export default function Input({ dataChannel }: InputProps) {
 
       const buffer = new ArrayBuffer(6);
       const view = new DataView(buffer);
-      view.setUint8(0, 2); // event type: mouse
+      view.setUint8(0, 2); // event type: mouse move
       view.setUint8(1, e.buttons); // mouse button bitmask
       view.setInt16(2, e.movementX); // relative X
       view.setInt16(4, e.movementY); // relative Y
 
+      sendBuffer(buffer);
+    };
+
+    const handleMouseDown = (e: MouseEvent) => {
+      if (document.pointerLockElement !== containerRef.current) return;
+
+      const buffer = new ArrayBuffer(3);
+      const view = new DataView(buffer);
+      view.setUint8(0, 3); // event type: mouse button event
+      view.setUint8(1, e.button); // which button (0 left, 1 middle, 2 right)
+      view.setUint8(2, 1); // 1 = button down
+      sendBuffer(buffer);
+    };
+
+    const handleMouseUp = (e: MouseEvent) => {
+      if (document.pointerLockElement !== containerRef.current) return;
+
+      const buffer = new ArrayBuffer(3);
+      const view = new DataView(buffer);
+      view.setUint8(0, 3); // event type: mouse button event
+      view.setUint8(1, e.button);
+      view.setUint8(2, 0); // 0 = button up
       sendBuffer(buffer);
     };
 
@@ -184,17 +206,38 @@ export default function Input({ dataChannel }: InputProps) {
     };
 
     document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mousedown", handleMouseDown);
+    document.addEventListener("mouseup", handleMouseUp);
     document.addEventListener("pointerlockchange", handlePointerLockChange);
 
     return () => {
       document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mousedown", handleMouseDown);
+      document.removeEventListener("mouseup", handleMouseUp);
       document.removeEventListener(
         "pointerlockchange",
         handlePointerLockChange
       );
     };
   }, [sendBuffer]);
+  useEffect(() => {
+    const handleWheel = (e: WheelEvent) => {
+      const buffer = new ArrayBuffer(4);
+      const view = new DataView(buffer);
+      view.setUint8(0, 4); // event type: scroll
+      view.setInt16(1, Math.max(-1, Math.min(1, Math.round(e.deltaY / 100)))); // scroll delta Y (signed)
+      // you can add deltaX if you want, but your server only expects Y for now
 
+      sendBuffer(buffer);
+    };
+
+    const element = containerRef.current;
+    element?.addEventListener("wheel", handleWheel);
+
+    return () => {
+      element?.removeEventListener("wheel", handleWheel);
+    };
+  }, [sendBuffer]);
   return (
     <div
       ref={containerRef}
