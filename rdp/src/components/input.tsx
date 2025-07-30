@@ -102,7 +102,28 @@ export default function Input({ dataChannel }: InputProps) {
     },
     [dataChannel]
   );
+  const handleKeyUp = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    const keyCode = KeyMap[e.code];
+    if (keyCode === undefined) {
+      console.warn("Unknown key:", e.code);
+      return;
+    }
 
+    let modifiers = 0;
+    if (e.ctrlKey) modifiers |= 1 << 0;
+    if (e.shiftKey) modifiers |= 1 << 1;
+    if (e.altKey) modifiers |= 1 << 2;
+    if (e.metaKey) modifiers |= 1 << 3;
+
+    const buffer = new ArrayBuffer(5);
+    const view = new DataView(buffer);
+    view.setUint8(0, 1); // event type: keyboard
+    view.setUint16(1, keyCode);
+    view.setUint8(3, modifiers);
+    view.setUint8(4, 0); // keyUp
+
+    sendBuffer(buffer);
+  };
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     const blockedShortcuts = new Set([
       "KeyS",
@@ -140,11 +161,12 @@ export default function Input({ dataChannel }: InputProps) {
     if (e.altKey) modifiers |= 1 << 2;
     if (e.metaKey) modifiers |= 1 << 3;
 
-    const buffer = new ArrayBuffer(4);
+    const buffer = new ArrayBuffer(5);
     const view = new DataView(buffer);
     view.setUint8(0, 1); // event type: keyboard
     view.setUint16(1, keyCode);
     view.setUint8(3, modifiers);
+    view.setUint8(4, 1);
 
     sendBuffer(buffer);
   };
@@ -245,6 +267,7 @@ export default function Input({ dataChannel }: InputProps) {
       tabIndex={0}
       onClick={handleClick}
       onKeyDown={handleKeyDown}
+      onKeyUp={handleKeyUp}
       style={{ outline: "none", cursor: "crosshair" }}
     />
   );
