@@ -81,7 +81,7 @@ Bytes Received:   ${bytesReceived}`);
     conn.onopen = () => resolve();
   });
 
-  //pc.addTransceiver("audio", { direction: "recvonly" });
+  pc.addTransceiver("audio", { direction: "recvonly" });
   pc.addTransceiver("video", { direction: "recvonly" });
 
   const offer = await pc.createOffer();
