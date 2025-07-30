@@ -18,6 +18,12 @@ export async function startWebRTC(video: HTMLVideoElement) {
       const stats = await pc.getStats();
 
       stats.forEach((report) => {
+        if (report.type === "inbound-rtp" && report.kind === "audio") {
+          console.log(`[Audio Stats]
+  Packets Received: ${report.packetsReceived}
+  Packets Lost:     ${report.packetsLost}
+  Jitter:           ${report.jitter}`);
+        }
         if (report.type === "inbound-rtp" && report.kind === "video") {
           const packetsLost = report.packetsLost ?? 0;
           const packetsReceived = report.packetsReceived ?? 0;
