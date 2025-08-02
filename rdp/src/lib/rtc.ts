@@ -1,5 +1,8 @@
-export async function startWebRTC(video: HTMLVideoElement) {
-  const conn = new WebSocket("wss://not2.projecteclipse.org");
+export async function startWebRTC(video: HTMLVideoElement, id: string) {
+  const my_id = "itismemario";
+  const conn = new WebSocket(
+    `wss://${process.env.NEXT_PUBLIC_SOCKET_URL}/ws?id=${my_id}&type=client`
+  );
 
   const pc = new RTCPeerConnection({
     iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
@@ -50,7 +53,13 @@ Bytes Received:   ${bytesReceived}`);
 
   pc.onicecandidate = (event) => {
     if (event.candidate) {
-      conn.send(JSON.stringify({ type: "ice", candidate: event.candidate }));
+      conn.send(
+        JSON.stringify({
+          From: my_id,
+          To: id,
+          content: { type: "ice", candidate: event.candidate },
+        })
+      );
     }
   };
 
@@ -58,15 +67,16 @@ Bytes Received:   ${bytesReceived}`);
 
   conn.onmessage = async (message) => {
     const msg = JSON.parse(message.data);
+    console.log(msg);
 
-    if (msg.type === "answer") {
+    if (msg.content.type === "answer") {
       if (remoteDescriptionSet) {
         console.warn("Ignoring duplicate answer");
         return;
       }
 
       await pc.setRemoteDescription(
-        new RTCSessionDescription({ type: "answer", sdp: msg.sdp })
+        new RTCSessionDescription({ type: "answer", sdp: msg.content.sdp })
       );
       remoteDescriptionSet = true;
 
@@ -75,11 +85,11 @@ Bytes Received:   ${bytesReceived}`);
         await pc.addIceCandidate(new RTCIceCandidate(candidate));
       }
       pendingCandidates.length = 0;
-    } else if (msg.type === "ice" && msg.candidate) {
+    } else if (msg.content.type === "ice" && msg.content.candidate) {
       if (remoteDescriptionSet) {
-        await pc.addIceCandidate(new RTCIceCandidate(msg.candidate));
+        await pc.addIceCandidate(new RTCIceCandidate(msg.content.candidate));
       } else {
-        pendingCandidates.push(msg.candidate);
+        pendingCandidates.push(msg.content.candidate);
       }
     }
   };
@@ -96,7 +106,13 @@ Bytes Received:   ${bytesReceived}`);
 
   console.log("Ready to send SDP OFFER!");
 
-  conn.send(JSON.stringify({ type: "offer", sdp: offer.sdp }));
+  conn.send(
+    JSON.stringify({
+      From: my_id,
+      To: id,
+      content: { type: "offer", sdp: offer.sdp },
+    })
+  );
   console.log("Sent SDP offer", offer.sdp);
 
   return { pc, dataChannel };

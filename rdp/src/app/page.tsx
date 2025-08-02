@@ -1,10 +1,14 @@
 "use client";
 
-import dynamic from "next/dynamic";
-
-// Dynamically import the App (which includes WebRTC + Player + Input)
-const App = dynamic(() => import("../components/App"), { ssr: false });
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 export default function Page() {
-  return <App />;
+  const router = useRouter();
+
+  useEffect(() => {
+    router.replace("/dashboard");
+  }, [router]);
+
+  return null;
 }
