@@ -209,7 +209,7 @@ export default function Input({ dataChannel, videoRef }: InputProps) {
       const buffer = new ArrayBuffer(6);
       const view = new DataView(buffer);
       view.setUint8(0, 2); // event type: mouse move
-      view.setUint8(1, e.buttons); // mouse button bitmask
+      view.setUint8(1, e.buttons); // mouse button bitmask //deprecated
       view.setInt16(2, e.movementX); // relative X
       view.setInt16(4, e.movementY); // relative Y
 
