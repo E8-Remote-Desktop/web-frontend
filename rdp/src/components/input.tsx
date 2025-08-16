@@ -87,7 +87,7 @@ const KeyMap: Record<string, number> = {
   ControlRight: 97,
   Delete: 111,
 };
-
+let mouseScaleFactor = 1.0
 export default function Input({ dataChannel, videoRef }: InputProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -104,6 +104,14 @@ export default function Input({ dataChannel, videoRef }: InputProps) {
       console.error("Error unmuting video: ", err);
     }
   }, [videoRef]);
+
+  const setScaleFactor = useCallback(async () => {
+    try {
+      videoRef.current?.width
+    } catch (err) {
+      console.error("Could not set scale factor, defaulting to 1.0")
+    }
+  }, [videoRef])
 
   const sendBuffer = useCallback(
     (buffer: ArrayBuffer) => {
