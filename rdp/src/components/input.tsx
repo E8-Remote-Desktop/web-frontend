@@ -1,10 +1,37 @@
 "use client";
 
-import { useRef, useEffect, useCallback, RefObject } from "react";
+import { useRef, useEffect, useCallback, RefObject, useState } from "react";
 
 interface InputProps {
   dataChannel: RTCDataChannel | null;
   videoRef: RefObject<HTMLVideoElement | null>;
+}
+
+export function useMouseScale(videoRef: RefObject<HTMLVideoElement | null>) {
+  const [mouseScaleFactor, setMouseScaleFactor] = useState(1.0);
+
+  const updateScale = useCallback(() => {
+    const video = videoRef.current;
+    if (!video) return setMouseScaleFactor(1.0);
+
+    const scaleX = video.videoWidth / video.clientWidth;
+    const scaleY = video.videoHeight / video.clientHeight;
+    setMouseScaleFactor(Math.min(scaleX, scaleY));
+  }, [videoRef]);
+
+  useEffect(() => {
+    updateScale();
+    window.addEventListener("resize", updateScale);
+    const video = videoRef.current;
+    video?.addEventListener("loadedmetadata", updateScale);
+
+    return () => {
+      window.removeEventListener("resize", updateScale);
+      video?.removeEventListener("loadedmetadata", updateScale);
+    };
+  }, [updateScale, videoRef]);
+
+  return mouseScaleFactor;
 }
 
 // Linux-compatible keycode mapping (from linux/input-event-codes.h)
@@ -87,9 +114,10 @@ const KeyMap: Record<string, number> = {
   ControlRight: 97,
   Delete: 111,
 };
-let mouseScaleFactor = 1.0
 export default function Input({ dataChannel, videoRef }: InputProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const mouseScaleFactor = useMouseScale(videoRef);
+  console.log(`mouseScaleFactor: ${mouseScaleFactor}`);
 
   const handleUnmute = useCallback(async () => {
     const video = videoRef.current;
@@ -104,14 +132,6 @@ export default function Input({ dataChannel, videoRef }: InputProps) {
       console.error("Error unmuting video: ", err);
     }
   }, [videoRef]);
-
-  const setScaleFactor = useCallback(async () => {
-    try {
-      videoRef.current?.width
-    } catch (err) {
-      console.error("Could not set scale factor, defaulting to 1.0")
-    }
-  }, [videoRef])
 
   const sendBuffer = useCallback(
     (buffer: ArrayBuffer) => {
@@ -218,8 +238,8 @@ export default function Input({ dataChannel, videoRef }: InputProps) {
       const view = new DataView(buffer);
       view.setUint8(0, 2); // event type: mouse move
       view.setUint8(1, e.buttons); // mouse button bitmask //deprecated
-      view.setInt16(2, e.movementX); // relative X
-      view.setInt16(4, e.movementY); // relative Y
+      view.setInt16(2, e.movementX * mouseScaleFactor); // relative X
+      view.setInt16(4, e.movementY * mouseScaleFactor); // relative Y
 
       sendBuffer(buffer);
     };
@@ -230,7 +250,7 @@ export default function Input({ dataChannel, videoRef }: InputProps) {
       const buffer = new ArrayBuffer(3);
       const view = new DataView(buffer);
       view.setUint8(0, 3); // event type: mouse button event
-      view.setUint8(1, e.button); // which button (0 left, 1 middle, 2 right)
+      view.setUint8(1, e.button);
       view.setUint8(2, 1); // 1 = button down
       sendBuffer(buffer);
     };
@@ -265,7 +285,7 @@ export default function Input({ dataChannel, videoRef }: InputProps) {
         handlePointerLockChange
       );
     };
-  }, [sendBuffer]);
+  }, [mouseScaleFactor, sendBuffer]);
   useEffect(() => {
     const handleWheel = (e: WheelEvent) => {
       const buffer = new ArrayBuffer(4);
