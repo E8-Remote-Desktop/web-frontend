@@ -176,11 +176,26 @@ export default function Input({ dataChannel, videoRef }: InputProps) {
       "KeyF",
       "KeyZ",
       "KeyY",
+      "KeyR",
+    ]);
+    const blockedStandaloneKeys = new Set([
+      "F1",
+      "F2",
+      "F3",
+      "F4",
+      "F5",
+      "F12",
+      "Slash",
+      "Tab",
+      "Alt",
     ]);
 
     const metaKey = e.ctrlKey || e.metaKey;
 
-    if (metaKey && blockedShortcuts.has(e.code)) {
+    if (
+      (metaKey && blockedShortcuts.has(e.code)) ||
+      blockedStandaloneKeys.has(e.code)
+    ) {
       e.preventDefault();
       e.stopPropagation();
       console.log(`Blocked shortcut: ${metaKey ? "Ctrl/Cmd" : ""}+${e.code}`);
