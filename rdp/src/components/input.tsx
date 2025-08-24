@@ -188,6 +188,8 @@ export default function Input({ dataChannel, videoRef }: InputProps) {
       "Slash",
       "Tab",
       "Alt",
+      "Esc",
+      "Quote",
     ]);
 
     const metaKey = e.ctrlKey || e.metaKey;
