@@ -13,6 +13,7 @@ export default function Player({
         ref={videoRef}
         autoPlay
         muted
+        preload="none"
         playsInline
         className="absolute inset-0 w-full h-full object-contain bg-black"
       />
